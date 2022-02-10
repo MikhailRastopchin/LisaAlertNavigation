@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:provider/provider.dart';
 
 import 'global.dart';
 import 'routing/router.dart';
@@ -183,7 +184,10 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
       duration: AppStyle.toasts.duration,
       animDuration: AppStyle.toasts.animDuration,
       dismissOtherOnShow: true,
-      child: app,
+      child: ChangeNotifierProvider(
+        create: (context) => Global.coordinates,
+        child: app,
+      ),
     );
   }
 
@@ -204,6 +208,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
     Future.delayed(const Duration(seconds: 5), () {
       state.supportVisible = true;
     });
+
+    await Global.coordinates.init();
+    Global.coordinates.autoUpdating = true;
 
     Routing.replaceWith(state.context, Routes.home);
   }

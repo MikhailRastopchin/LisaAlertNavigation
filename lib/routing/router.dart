@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart' as toasts;
 
-import '../models.dart';
 import '../pages/common/styles.dart';
 import '../widgets/blur_transition.dart';
 import 'routes.dart';
@@ -73,9 +72,9 @@ abstract class Routing
     toasts.ToastManager().dismissAll();
   }
 
-  static Future<City?> showHome(final BuildContext context) async
+  static Future showHome(final BuildContext context) async
   {
-    return await Navigator.of(context).pushNamed<City>(Routes.home);
+    return Navigator.of(context).pushNamed(Routes.home);
   }
 
   static Future<void> replaceWith(

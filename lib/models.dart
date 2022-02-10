@@ -1,11 +1,2 @@
-export 'models/city.dart';
-export 'models/cloudiness.dart';
-export 'models/condition.dart';
-export 'models/coordinates.dart';
-export 'models/daily_forecast.dart';
-export 'models/rain.dart';
-export 'models/snow.dart';
-export 'models/temperature.dart';
-export 'models/weather.dart';
-export 'models/weather_info.dart';
-export 'models/wind.dart';
+export'models/another_fox_track.dart';
+export'models/fox_coordinate.dart';
