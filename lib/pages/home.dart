@@ -63,10 +63,10 @@ class _HomePageState extends State<HomePage>
     const padding = EdgeInsets.only(top: 8.0, bottom: 4.0);
     final theme = Theme.of(context);
     final selectedItemStyle = theme.textTheme.button!.copyWith(
-      color: AppStyle.liteColors.buttonColor,
+      color: AppStyle.liteColors.headerTextColor,
     );
     final unSelectedItemStyle = theme.textTheme.button!.copyWith(
-      color: AppStyle.liteColors.textColor,
+      color: AppStyle.liteColors.grip
     );
     return BottomNavigationBar(
       key: _bottomBarKey,
@@ -76,6 +76,7 @@ class _HomePageState extends State<HomePage>
       currentIndex: _viewIndex,
       showSelectedLabels: false,
       showUnselectedLabels: false,
+      backgroundColor: theme.colorScheme.primary,
       items: [
         BottomNavigationBarItem(
           icon: Padding(
