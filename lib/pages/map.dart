@@ -6,7 +6,8 @@ import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../services/coordinates.dart';
+import '../services/storage/coordinates.dart';
+import '../services/storage/map.dart';
 import '../widgets/zoombuttons.dart';
 import '../widgets/current_location_button.dart';
 import '../models.dart';
@@ -59,6 +60,16 @@ class _MapPageState extends State<MapPage>
   Widget get content
   {
     final coordinates = context.watch<CoordinatesService>();
+    final mapSettings = context.watch<MapService>();
+    final tileLayerOptions = mapSettings.useLocalMap
+      ? TileLayerOptions(
+          urlTemplate: "/storage/emulated/0/tiles/map/{z}/{x}/{y}.png",
+          tileProvider: const FileTileProvider(),
+        )
+      : TileLayerOptions(
+          urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          subdomains: ['a', 'b', 'c'],
+        );
     final markers = <Marker>[];
     final polilines = <Polyline>[];
     for (var index = 0; index < coordinates.tracks.length; index++) {
@@ -85,10 +96,7 @@ class _MapPageState extends State<MapPage>
         ],
       ),
       layers: [
-        TileLayerOptions(
-          urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          subdomains: ['a', 'b', 'c'],
-        ),
+        tileLayerOptions,
         MarkerLayerOptions(markers: markers),
         PolylineLayerOptions(polylines: polilines),
       ],

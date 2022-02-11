@@ -185,7 +185,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
       animDuration: AppStyle.toasts.animDuration,
       dismissOtherOnShow: true,
       child: ChangeNotifierProvider(
-        create: (context) => Global.coordinates,
+        create: (context) => Global.storage.coordinates,
         child: app,
       ),
     );
@@ -209,8 +209,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
       state.supportVisible = true;
     });
 
-    await Global.coordinates.init();
-    Global.coordinates.autoUpdatingTracks = true;
+    await Global.storage.init();
+    Global.storage.coordinates.autoUpdatingTracks = true;
 
     Routing.replaceWith(state.context, Routes.home);
   }

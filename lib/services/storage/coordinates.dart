@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:logging/logging.dart';
 
-import '../utils/file_system.dart';
-import '../models.dart';
+import '../../utils/file_system.dart';
+import '../../models.dart';
 
 
 final _log = Logger('CooordinatesService');
@@ -133,7 +134,7 @@ class CoordinatesService
           56.9958 + random.nextDouble() / 3000,
           40.9858 + random.nextDouble() / 3000,
         ),
-      ),
+      ),/*
       FoxCoordinate(
         id: 03,
         name: 'Роберт Аркадиевич',
@@ -214,7 +215,7 @@ class CoordinatesService
           56.9958 + random.nextDouble() / 3000,
           40.9858 + random.nextDouble() / 3000,
         ),
-      ),
+      ),*/
     ];
     return coodinates;
   }
