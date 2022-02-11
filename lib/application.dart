@@ -210,7 +210,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
     });
 
     await Global.coordinates.init();
-    Global.coordinates.autoUpdating = true;
+    Global.coordinates.autoUpdatingTracks = true;
 
     Routing.replaceWith(state.context, Routes.home);
   }

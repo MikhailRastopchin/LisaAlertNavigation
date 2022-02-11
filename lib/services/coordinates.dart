@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/file_system.dart';
@@ -21,18 +22,36 @@ class CoordinatesService
 {
   LatLng? get ownCoordinate => _ownCoordinate;
 
+  LatLng? get oldOwnCoordinate => _oldOwnCoordinate;
+
   List<AnotherFoxTrack> get tracks => _tracks;
 
-  bool get autoUpdating => _autoUpdating;
+  bool get autoUpdatingTracks => _autoUpdatingTracks;
 
-  set autoUpdating(final bool value)
+
+  set autoUpdatingTracks(final bool value)
   {
-    if (_autoUpdating == value) return;
-    _autoUpdating = value;
-    if (_autoUpdating) {
-      _startUpdating();
+    if (_autoUpdatingTracks == value) return;
+    _autoUpdatingTracks = value;
+    if (_autoUpdatingTracks) {
+      _startUpdatingTracks();
     } else {
       _updateTracksTimer?.cancel();
+    }
+  }
+
+  bool get isLocationServiceEnabled => _isLocationServiceEnabled;
+
+  Future<void> setLocationServiceEnabled(final bool value) async
+  {
+    if (_isLocationServiceEnabled == value) return;
+    _isLocationServiceEnabled = value;
+    if (_isLocationServiceEnabled) {
+      await _updateOwnCoordinate();
+      _ownCoordinateTimer = Timer.periodic(
+        _kRefreshRangeExpiration,
+        (_ownCoordinateTimer) => _updateOwnCoordinate(),
+      );
     }
   }
 
@@ -44,11 +63,25 @@ class CoordinatesService
     final formatter = DateFormat.yMd(localeName).add_Hm();
     final path = formatter.format(now);
     _storagePath = await getFilesPath(path: path, create: true);
-    await _updateOwnCoordinate();
-    _ownCoordinateTimer = Timer.periodic(
-      _kRefreshRangeExpiration,
-      (_ownCoordinateTimer) => _updateOwnCoordinate(),
-    );
+    _location = Location();
+    _isLocationServiceEnabled = await _location.serviceEnabled();
+    if (!_isLocationServiceEnabled) {
+      _isLocationServiceEnabled = await _location.requestService();
+    }
+    if (!_isLocationServiceEnabled) {
+      return;
+    } else {
+      _permissionGranted = await _location.hasPermission();
+      if (_permissionGranted == PermissionStatus.denied) {
+        _permissionGranted = await _location.requestPermission();
+      }
+      if (_permissionGranted != PermissionStatus.granted) return;
+      await _updateOwnCoordinate();
+      _ownCoordinateTimer = Timer.periodic(
+        _kRefreshRangeExpiration,
+        (_ownCoordinateTimer) => _updateOwnCoordinate(),
+      );
+    }
   }
 
   Future<void> _updateTracks() async
@@ -75,7 +108,7 @@ class CoordinatesService
     }
     _tracks = updatedTracks;
     await _saveTracks();
-    if (autoUpdating) _startUpdating();
+    if (autoUpdatingTracks) _startUpdatingTracks();
     notifyListeners();
   }
 
@@ -188,24 +221,28 @@ class CoordinatesService
 
   Future<void> _updateOwnCoordinate() async
   {
-    final random = Random();
-    final newCoordinate = LatLng(
-      56.9958 + random.nextDouble() / 500,
-      40.9858 + random.nextDouble() / 500,
-    );
-    _ownCoordinate = newCoordinate;
-    notifyListeners();
+    try {
+      final currentLocation = await _location.getLocation();
+      _oldOwnCoordinate = _ownCoordinate;
+      _ownCoordinate = LatLng(
+        currentLocation.latitude!,
+        currentLocation.longitude!
+      );
+      notifyListeners();
+    } catch (e) {
+      _log.warning('Failed to update own coordinate: $e');
+    }
   }
 
   @override
   void dispose()
   {
-    autoUpdating = false;
+    autoUpdatingTracks = false;
     _ownCoordinateTimer.cancel();
     super.dispose();
   }
 
-  void _startUpdating()
+  void _startUpdatingTracks()
   {
     _updateTracksTimer = Timer(_kRefreshRangeExpiration, () async {
       try {
@@ -227,9 +264,13 @@ class CoordinatesService
 
   late final String _storagePath;
   late final Timer _ownCoordinateTimer;
+  late final Location _location;
 
+  late bool _isLocationServiceEnabled;
+  late PermissionStatus _permissionGranted;
   List<AnotherFoxTrack> _tracks = [];
   Timer? _updateTracksTimer;
-  bool _autoUpdating = false;
+  bool _autoUpdatingTracks = false;
   LatLng? _ownCoordinate;
+  LatLng? _oldOwnCoordinate;
 }
