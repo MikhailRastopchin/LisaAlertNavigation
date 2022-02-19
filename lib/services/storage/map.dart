@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:logging/logging.dart';
 
 import '../../utils/file_system.dart';
@@ -12,32 +11,11 @@ final _log = Logger('Storage');
 class MapService
   with ChangeNotifier
 {
-  bool get useLocalMap => _useLocalMap;
+  MapSettings get settings => _settings;
 
-  LatLng? get swPanBoundary => _swPanBoundary;
-
-  LatLng? get nePanBoundary => _nePanBoundary;
-
-  Future<void> setUseLocalMap(final bool value) async
+  Future<void> setMap(final MapSettings value) async
   {
-    if (_useLocalMap == value) return;
-    _useLocalMap = value;
-    await _saveSettings();
-    notifyListeners();
-  }
-
-  Future<void> setSwPanBoundary(final LatLng? value) async
-  {
-    if (_swPanBoundary == value) return;
-    _swPanBoundary = value;
-    await _saveSettings();
-    notifyListeners();
-  }
-
-  Future<void> setNePanBoundary(final LatLng? value) async
-  {
-    if (_nePanBoundary == value) return;
-    _nePanBoundary = value;
+    _settings = value;
     await _saveSettings();
     notifyListeners();
   }
@@ -53,12 +31,9 @@ class MapService
     final jsonValue = await loadJson(_settingsPath);
     if (jsonValue == null) {
       _log.info('No map settings in the local storage.');
-      _useLocalMap = false;
+      _settings = MapSettings();
     } else {
-      final mapSettings = MapSettings.fromJson(jsonValue);
-      _useLocalMap = mapSettings.useLocalMap;
-      _swPanBoundary = mapSettings.swPanBoundary;
-      _nePanBoundary = mapSettings.nePanBoundary;
+      _settings = MapSettings.fromJson(jsonValue);
       _log.info('Map settings loaded from the local storage.');
     }
     notifyListeners();
@@ -66,12 +41,7 @@ class MapService
 
   Future<void> _saveSettings() async
   {
-    final mapSettings = MapSettings(
-      useLocalMap: useLocalMap,
-      swPanBoundary: swPanBoundary,
-      nePanBoundary: nePanBoundary,
-    );
-    await saveJson(_settingsPath, mapSettings);
+    await saveJson(_settingsPath, _settings);
     _log.info('Map settings saved in the local storage.');
   }
 
@@ -79,7 +49,5 @@ class MapService
 
   late final String _storagePath;
 
-  LatLng? _swPanBoundary;
-  LatLng? _nePanBoundary;
-  late bool _useLocalMap;
+  late MapSettings _settings;
 }

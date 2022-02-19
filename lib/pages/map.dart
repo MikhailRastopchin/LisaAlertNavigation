@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 
 import '../services/storage/coordinates.dart';
 import '../services/storage/map.dart';
-import '../widgets/zoombuttons.dart';
-import '../widgets/current_location_button.dart';
+import '../plugins/zoombuttons.dart';
+import '../plugins/current_location_button.dart';
 import '../models.dart';
 import 'common/styles.dart';
 
@@ -60,8 +60,8 @@ class _MapPageState extends State<MapPage>
   Widget get content
   {
     final coordinates = context.watch<CoordinatesService>();
-    final mapSettings = context.watch<MapService>();
-    final tileLayerOptions = mapSettings.useLocalMap
+    final mapService = context.watch<MapService>();
+    final tileLayerOptions = mapService.settings.useLocalMap
       ? TileLayerOptions(
           urlTemplate: "/storage/emulated/0/tiles/map/{z}/{x}/{y}.png",
           tileProvider: const FileTileProvider(),

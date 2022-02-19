@@ -19,7 +19,7 @@ abstract class AppStyle
     criticalDarkColor: Color(0xff740303),
     successColor: Color(0xffc9ffb9),
     successDarkColor: Color(0xff1e8016),
-    dividerColor: Color(0xfffdfdfd),
+    dividerColor: Color(0xff000000),
     toastBackground: Color(0xc6111111),
     toastForeground: Color(0xfffdfdfd),
     grip: Color(0xff7f7f7f),

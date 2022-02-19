@@ -184,8 +184,18 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
       duration: AppStyle.toasts.duration,
       animDuration: AppStyle.toasts.animDuration,
       dismissOtherOnShow: true,
-      child: ChangeNotifierProvider(
-        create: (context) => Global.storage.coordinates,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (context) => Global.storage.coordinates,
+          ),
+          ChangeNotifierProvider(
+            create: (context) => Global.storage.map,
+          ),
+          ChangeNotifierProvider(
+            create: (context) => Global.storage.grid,
+          ),
+        ],
         child: app,
       ),
     );

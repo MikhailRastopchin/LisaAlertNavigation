@@ -11,7 +11,9 @@ class MapSettings
     this.useLocalMap = false,
     this.swPanBoundary,
     this.nePanBoundary
-  });
+  }) : assert(
+    useLocalMap == false || (nePanBoundary != null && swPanBoundary != null)
+  );
 
   factory MapSettings.fromJson(final Map<String, dynamic> jsonValue)
   {

@@ -14,7 +14,15 @@ class GridSettings
     this.gridStep,
     this.horizontalStepsCount,
     this.verticalStepsCount
-  });
+  }) : assert(
+    showGrid == false
+    || (
+      startCoordinate != null
+      && gridStep != null
+      && horizontalStepsCount != null
+      && verticalStepsCount != null
+    )
+  );
 
   factory GridSettings.fromJson(final Map<String, dynamic> jsonValue)
   {
