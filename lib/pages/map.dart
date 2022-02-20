@@ -72,6 +72,7 @@ class _MapPageState extends State<MapPage>
       : TileLayerOptions(
           urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           subdomains: ['a', 'b', 'c'],
+          tileProvider: NetworkTileProvider(),
         );
     List<Quadrant> quadrants = [];
     if (gridService.settings.showGrid) quadrants = gridService.quadrants!;
