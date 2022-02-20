@@ -13,10 +13,13 @@ class GridService
 {
   GridSettings get settings => _settings;
 
+  List<Quadrant>? get quadrants => _quadrants;
+
   Future<void> setGrid(final GridSettings value) async
   {
     _settings = value;
     await _saveSettings();
+    if (_settings.showGrid) _quadrants = Quadrant.generateQuadrants(_settings);
     notifyListeners();
   }
 
@@ -34,6 +37,7 @@ class GridService
       _settings = GridSettings();
     } else {
       _settings = GridSettings.fromJson(jsonValue);
+      if (_settings.showGrid) _quadrants = Quadrant.generateQuadrants(_settings);
       _log.info('Grid settings loaded from the local storage.');
     }
     notifyListeners();
@@ -50,4 +54,6 @@ class GridService
   late final String _storagePath;
 
   late GridSettings _settings;
+
+  List<Quadrant>? _quadrants;
 }

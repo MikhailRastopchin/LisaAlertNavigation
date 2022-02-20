@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:la_navigation/plugins/grid.dart';
+import 'package:la_navigation/services/storage/grid.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -61,6 +63,7 @@ class _MapPageState extends State<MapPage>
   {
     final coordinates = context.watch<CoordinatesService>();
     final mapService = context.watch<MapService>();
+    final gridService = context.watch<GridService>();
     final tileLayerOptions = mapService.settings.useLocalMap
       ? TileLayerOptions(
           urlTemplate: "/storage/emulated/0/tiles/map/{z}/{x}/{y}.png",
@@ -70,6 +73,8 @@ class _MapPageState extends State<MapPage>
           urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           subdomains: ['a', 'b', 'c'],
         );
+    List<Quadrant> quadrants = [];
+    if (gridService.settings.showGrid) quadrants = gridService.quadrants!;
     final markers = <Marker>[];
     final polilines = <Polyline>[];
     for (var index = 0; index < coordinates.tracks.length; index++) {
@@ -84,6 +89,9 @@ class _MapPageState extends State<MapPage>
       coordinates.ownCoordinate!,
       coordinates.oldOwnCoordinate ?? coordinates.ownCoordinate!,
     );
+    final gridMarkers = quadrants
+      .map((quadrant) => _buildGridMarker(quadrant));
+    markers.addAll(gridMarkers);
     markers.add(ownMarker);
     return FlutterMap(
       mapController: _mapController,
@@ -91,12 +99,16 @@ class _MapPageState extends State<MapPage>
         center: coordinates.ownCoordinate,
         zoom: 18.0,
         plugins: [
+          if (gridService.settings.showGrid) GridLayerPlugin(),
           ZoomButtonsPlugin(),
           CurrentLocationButtonPlugin(),
         ],
       ),
       layers: [
         tileLayerOptions,
+        if (gridService.settings.showGrid) GridLayerPluginOption(
+          quadrants: quadrants
+        ),
         MarkerLayerOptions(markers: markers),
         PolylineLayerOptions(polylines: polilines),
       ],
@@ -140,6 +152,30 @@ class _MapPageState extends State<MapPage>
             )),
           ),
         ],
+      ),
+    );
+  }
+
+  Marker _buildGridMarker(final Quadrant quadrant)
+  {
+    const labelSize = 14.0;
+    return Marker(
+      key: ValueKey(quadrant.label),
+      width: 30,
+      height: labelSize,
+      point: quadrant.points[0],
+      builder: (context) => Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(labelSize / 2),
+          color: quadrant.color
+        ),
+        constraints: const BoxConstraints(
+          minHeight: labelSize,
+          minWidth: labelSize,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Text(quadrant.label, style: quadrant.labelStyle!),
       ),
     );
   }

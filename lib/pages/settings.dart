@@ -277,7 +277,7 @@ class _DailyForecastPageState extends State<DailyForecastPage>
       ]),
       const SizedBox(height: 15.0),
       Row(children: [
-        const Expanded(child: Text('Количество ячеек по горизотнтали, м:')),
+        const Expanded(child: Text('Количество ячеек по горизотнтали, шт:')),
         const SizedBox(width: 10.0),
         SizedBox(width: 100.0,
           child: TextField(
@@ -294,7 +294,7 @@ class _DailyForecastPageState extends State<DailyForecastPage>
       ]),
       const SizedBox(height: 15.0),
       Row(children: [
-        const Expanded(child: Text('Количество ячеек по вертикали, м:')),
+        const Expanded(child: Text('Количество ячеек по вертикали, шт:')),
         const SizedBox(width: 10.0),
         SizedBox(width: 100.0,
           child: TextField(
