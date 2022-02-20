@@ -29,7 +29,6 @@ class CoordinatesService
 
   bool get autoUpdatingTracks => _autoUpdatingTracks;
 
-
   set autoUpdatingTracks(final bool value)
   {
     if (_autoUpdatingTracks == value) return;
@@ -40,6 +39,17 @@ class CoordinatesService
       _updateTracksTimer?.cancel();
     }
   }
+
+  bool get showOwnTrack => _showOwnTack;
+
+  set showOwnTrack(final bool value)
+  {
+    if (_showOwnTack == value) return;
+    _showOwnTack = value;
+    notifyListeners();
+  }
+
+  AnotherFoxTrack get ownTrack => _ownTrack;
 
   bool get isLocationServiceEnabled => _isLocationServiceEnabled;
 
@@ -78,6 +88,12 @@ class CoordinatesService
       }
       if (_permissionGranted != PermissionStatus.granted) return;
       await _updateOwnCoordinate();
+      _ownTrack = AnotherFoxTrack(
+        id: 0,
+        name: 'own',
+        currentCoordinate: _ownCoordinate!,
+        track: {DateTime.now(): _ownCoordinate!}
+      );
       _ownCoordinateTimer = Timer.periodic(
         _kRefreshRangeExpiration,
         (_ownCoordinateTimer) => _updateOwnCoordinate(),
@@ -229,6 +245,7 @@ class CoordinatesService
         currentLocation.latitude!,
         currentLocation.longitude!
       );
+      _ownTrack.track[DateTime.now()] = _ownCoordinate!;
       notifyListeners();
     } catch (e) {
       _log.warning('Failed to update own coordinate: $e');
@@ -256,7 +273,9 @@ class CoordinatesService
 
   Future<void> _saveTracks() async
   {
-    for (var track in _tracks) {
+    final tracks =_tracks.toList();
+    tracks.add(_ownTrack);
+    for (var track in tracks) {
       final path = '$_storagePath/${track.id}_${track.name}.json';
       await saveJson(path, _tracks);
     }
@@ -266,6 +285,7 @@ class CoordinatesService
   late final String _storagePath;
   late final Timer _ownCoordinateTimer;
   late final Location _location;
+  late final AnotherFoxTrack _ownTrack;
 
   late bool _isLocationServiceEnabled;
   late PermissionStatus _permissionGranted;
@@ -274,4 +294,5 @@ class CoordinatesService
   bool _autoUpdatingTracks = false;
   LatLng? _ownCoordinate;
   LatLng? _oldOwnCoordinate;
+  bool _showOwnTack = false;
 }

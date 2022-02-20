@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:la_navigation/services/storage/coordinates.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -81,6 +82,8 @@ class _DailyForecastPageState extends State<DailyForecastPage>
     settings.addAll(gridSettings);
     settings. add(const Divider());
     settings.addAll(mapSettings);
+    settings. add(const Divider());
+    settings.addAll(ownTrackSettings);
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки'), centerTitle: true),
       body: FocusScope(
@@ -318,6 +321,22 @@ class _DailyForecastPageState extends State<DailyForecastPage>
       )
     ];
     return gridSettings;
+  }
+
+  List<Widget> get ownTrackSettings
+  {
+    final coordinateService = context.watch<CoordinatesService>();
+    final settings = [
+      Row(children: [
+        const Expanded(child: Text('Отображать собственный трек')),
+        Switch(
+          value: coordinateService.showOwnTrack,
+          onChanged: (value)
+            => coordinateService.showOwnTrack = !coordinateService.showOwnTrack
+        ),
+      ]),
+    ];
+    return settings;
   }
 
   Future<void> _saveMapSettings() async

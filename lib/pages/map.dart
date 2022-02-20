@@ -78,6 +78,9 @@ class _MapPageState extends State<MapPage>
     if (gridService.settings.showGrid) quadrants = gridService.quadrants!;
     final markers = <Marker>[];
     final polilines = <Polyline>[];
+    if (coordinates.showOwnTrack) {
+      polilines.add(_buildPoliline(coordinates.ownTrack, Colors.red));
+    }
     for (var index = 0; index < coordinates.tracks.length; index++) {
       final dividedIndex = index > 9 ? index % 10 : index;
       assert(dividedIndex < _kMarkerColors.length);
@@ -110,8 +113,8 @@ class _MapPageState extends State<MapPage>
         if (gridService.settings.showGrid) GridLayerPluginOption(
           quadrants: quadrants
         ),
-        MarkerLayerOptions(markers: markers),
         PolylineLayerOptions(polylines: polilines),
+        MarkerLayerOptions(markers: markers),
       ],
       nonRotatedLayers: [
         CurrentLocationButtonPluginOption(
