@@ -75,7 +75,11 @@ class _MapPageState extends State<MapPage>
           tileProvider: NetworkTileProvider(),
         );
     List<Quadrant> quadrants = [];
-    if (gridService.settings.showGrid) quadrants = gridService.quadrants!;
+    Map<String, LatLng> gridPoints = {};
+    if (gridService.settings.showGrid) {
+      quadrants = gridService.quadrants!;
+      gridPoints = gridService.gridPoints!;
+    }
     final markers = <Marker>[];
     final polilines = <Polyline>[];
     if (coordinates.showOwnTrack) {
@@ -93,8 +97,11 @@ class _MapPageState extends State<MapPage>
       coordinates.ownCoordinate!,
       coordinates.oldOwnCoordinate ?? coordinates.ownCoordinate!,
     );
-    final gridMarkers = quadrants
-      .map((quadrant) => _buildGridMarker(quadrant));
+    final gridMarkers = gridPoints.entries
+      .map((point) => _buildGridMarker(
+        label: point.key,
+        coordinate: point.value
+      ));
     markers.addAll(gridMarkers);
     markers.add(ownMarker);
     return FlutterMap(
@@ -144,6 +151,7 @@ class _MapPageState extends State<MapPage>
       width: 120,
       height: 30.0,
       point: track.currentCoordinate,
+      rotate: true,
       anchorPos: AnchorPos.exactly(Anchor(105.0, 0.0)),
       builder: (context) => Row(
         children: [
@@ -160,26 +168,33 @@ class _MapPageState extends State<MapPage>
     );
   }
 
-  Marker _buildGridMarker(final Quadrant quadrant)
+  Marker _buildGridMarker({
+    required final String label,
+    required final LatLng coordinate,
+  })
   {
     const labelSize = 14.0;
     return Marker(
-      key: ValueKey(quadrant.label),
+      key: ValueKey(coordinate),
       width: 30,
       height: labelSize,
-      point: quadrant.points[0],
-      builder: (context) => Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(labelSize / 2),
-          color: quadrant.color
+      point: coordinate,
+      rotate: true,
+      builder: (context) => Tooltip(
+        message: 'Широта: ${coordinate.latitude}, долгота: ${coordinate.longitude}',
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(labelSize / 2),
+            color: Colors.black
+          ),
+          constraints: const BoxConstraints(
+            minHeight: labelSize,
+            minWidth: labelSize,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Text(label, style: const TextStyle(color: Colors.amber)),
         ),
-        constraints: const BoxConstraints(
-          minHeight: labelSize,
-          minWidth: labelSize,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: Text(quadrant.label, style: quadrant.labelStyle!),
       ),
     );
   }
