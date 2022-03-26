@@ -24,16 +24,27 @@ class DirectionPage extends StatefulWidget
 
 
 class _DirectionPageState extends State<DirectionPage>
+  with TickerProviderStateMixin
 {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateAzimuth());
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+      animationBehavior: AnimationBehavior.preserve
+    );
+    _animation = Tween<double>(
+        begin: const Angle.degrees(0.0).radians * -1,
+        end: const Angle.degrees(180).radians * -1,
+      ).animate(_animationController);
+    _timer = Timer(const Duration(milliseconds: 25), _updateAzimuth);
   }
 
   @override
   void dispose()
   {
+    _animationController.dispose();
     _timer.cancel();
     super.dispose();
   }
@@ -142,7 +153,7 @@ class _DirectionPageState extends State<DirectionPage>
   )
   {
     final media = MediaQuery.of(context);
-    final content =Container(
+    final content = Container(
       height: media.size.width - 10,
       width: media.size.width - 10,
       padding: const EdgeInsets.all(5.0),
@@ -150,8 +161,8 @@ class _DirectionPageState extends State<DirectionPage>
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
       ),
-      child: Transform.rotate(
-        angle: Angle.degrees(direction).radians * -1,
+      child: AnimatedBuilder(
+        animation: _animation,
         child: Stack(
           alignment: AlignmentDirectional.center,
           children: [
@@ -171,6 +182,12 @@ class _DirectionPageState extends State<DirectionPage>
             ),
           ],
         ),
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: _animation.value,
+            child: child
+          );
+        }
       ),
     );
 
@@ -266,8 +283,15 @@ class _DirectionPageState extends State<DirectionPage>
 
   Future<void> _updateAzimuth() async
   {
+    _timer.cancel();
     final CompassEvent tmp = await FlutterCompass.events!.first;
-    setState(() => _currentData = tmp);
+    _previosData = _currentData;
+    _currentData = tmp;
+    _animation = Tween<double>(
+      begin: Angle.degrees(_previosData?.heading ?? 0.0).radians * -1,
+      end: Angle.degrees(_currentData!.heading!).radians * -1,
+    ).animate(_animationController);
+    _timer = Timer(Duration.zero, () => _updateAzimuth());
   }
 
   Map<Color, List<double>> _getAzimuthsAndDistances(
@@ -291,6 +315,10 @@ class _DirectionPageState extends State<DirectionPage>
     return azimuthsAndDistances;
   }
 
-  late final Timer _timer;
+  late final AnimationController _animationController;
+  late Animation<double> _animation;
+
+  late Timer _timer;
   CompassEvent? _currentData;
+  CompassEvent? _previosData;
 }
