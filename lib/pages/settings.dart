@@ -106,10 +106,59 @@ class _DailyForecastPageState extends State<DailyForecastPage>
   {
     final theme = Theme.of(context);
     final mapSettings = [
-      Text('Настройки карты',
+      Text('Настройки локальной карты',
         style: theme.textTheme.headline5,
         textAlign: TextAlign.center,
       ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _nePanBoundaryLatController,
+        decoration: InputDecoration(
+          labelText: 'Широта северо-восточной границы карты:',
+          errorText: _nePanBoundaryLatError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _nePanBoundaryLatError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _nePanBoundaryLongController,
+        decoration: InputDecoration(
+          labelText: 'Долгота северо-восточной границы карты:',
+          errorText: _nePanBoundaryLongError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _nePanBoundaryLongError = null),
+      ),
+      const SizedBox(height: 5.0),
+      TextField(
+        controller: _swPanBoundaryLatController,
+        decoration: InputDecoration(
+          labelText: 'Широта юго-западной границы карты:',
+          errorText: _swPanBoundaryLatError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _swPanBoundaryLatError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _swPanBoundaryLongController,
+        decoration: InputDecoration(
+          labelText: 'Долгота юго-западной границы карты:',
+          errorText: _swPanBoundaryLongError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.done,
+        onChanged: (value) => setState(() => _nePanBoundaryLongError = null),
+      ),
+      const SizedBox(height: 15.0),
       Row(children: [
         const Expanded(child: Text('Использовать локальную карту')),
         Switch(
@@ -117,85 +166,6 @@ class _DailyForecastPageState extends State<DailyForecastPage>
           onChanged: (value) => setState(() => _useLocalMap = !_useLocalMap),
         ),
       ]),
-      const SizedBox(height: 15.0),
-      Text('Координаты северо-восточной границы карты',
-        style: theme.textTheme.headline6,
-        textAlign: TextAlign.center
-      ),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Широта:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _nePanBoundaryLatController,
-            decoration: InputDecoration(
-              errorText: _nePanBoundaryLatError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _nePanBoundaryLatError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Долгота:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _nePanBoundaryLongController,
-            decoration: InputDecoration(
-              errorText: _nePanBoundaryLongError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _nePanBoundaryLongError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 5.0),
-      Text('Координаты юго-западной границы карты',
-        style: theme.textTheme.headline6,
-        textAlign: TextAlign.center
-      ),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Широта:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _swPanBoundaryLatController,
-            decoration: InputDecoration(
-              errorText: _swPanBoundaryLatError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _swPanBoundaryLatError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Долгота:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _swPanBoundaryLongController,
-            decoration: InputDecoration(
-              errorText: _swPanBoundaryLongError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            onChanged: (value) => setState(() => _nePanBoundaryLongError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 5.0),
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 25.0),
         child: ElevatedButton(
@@ -216,100 +186,72 @@ class _DailyForecastPageState extends State<DailyForecastPage>
         style: theme.textTheme.headline5,
         textAlign: TextAlign.center,
       ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _gridStartLatController,
+        decoration: InputDecoration(
+          labelText: 'Широта начальной точки',
+          errorText: _gridStartLatError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _gridStartLatError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _gridStartLongController,
+        decoration: InputDecoration(
+          labelText: 'Долгота начальной точки',
+          errorText: _gridStartLongError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _gridStartLongError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _gridStepController,
+        decoration: InputDecoration(
+          labelText: 'Шаг сетки, м:',
+          errorText: _gridStepError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _gridStepError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _horyzontalStepsCountController,
+        decoration: InputDecoration(
+          labelText: 'Количество ячеек по горизотнтали, шт:',
+          errorText: _horyzontalStepsCountError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        onChanged: (value) => setState(() => _horyzontalStepsCountError = null),
+      ),
+      const SizedBox(height: 15.0),
+      TextField(
+        controller: _verticalStepsCountController,
+        decoration: InputDecoration(
+          labelText: 'Количество ячеек по вертикали, шт:',
+          errorText: _verticalStepsCountError,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.done,
+        onChanged: (value) => setState(() => _verticalStepsCountError = null),
+      ),
+      const SizedBox(height: 15.0),
       Row(children: [
         const Expanded(child: Text('Отобразить сетку')),
         Switch(
           value: _showGrid,
           onChanged: (value) => setState(() => _showGrid = !_showGrid),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Text('Координаты начала сетки',
-        style: theme.textTheme.headline6,
-        textAlign: TextAlign.center
-      ),
-      Row(children: [
-        const Expanded(child: Text('Широта:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _gridStartLatController,
-            decoration: InputDecoration(
-              errorText: _gridStartLatError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _gridStartLatError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Долгота:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _gridStartLongController,
-            decoration: InputDecoration(
-              errorText: _gridStartLongError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _gridStartLongError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Шаг сетки, м:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _gridStepController,
-            decoration: InputDecoration(
-              errorText: _gridStepError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _gridStepError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Количество ячеек по горизотнтали, шт:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _horyzontalStepsCountController,
-            decoration: InputDecoration(
-              errorText: _horyzontalStepsCountError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            onChanged: (value) => setState(() => _horyzontalStepsCountError = null),
-          ),
-        ),
-      ]),
-      const SizedBox(height: 15.0),
-      Row(children: [
-        const Expanded(child: Text('Количество ячеек по вертикали, шт:')),
-        const SizedBox(width: 10.0),
-        SizedBox(width: 100.0,
-          child: TextField(
-            controller: _verticalStepsCountController,
-            decoration: InputDecoration(
-              errorText: _verticalStepsCountError,
-              border: const OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            onChanged: (value) => setState(() => _verticalStepsCountError = null),
-          ),
         ),
       ]),
       Padding(
@@ -318,7 +260,7 @@ class _DailyForecastPageState extends State<DailyForecastPage>
           child: const Text('Сохранить'),
           onPressed: _saveGridSettings,
         ),
-      )
+      ),
     ];
     return gridSettings;
   }
