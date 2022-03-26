@@ -128,3 +128,17 @@ class Input
   })
   : assert(disabledFactor >= 0.0 && disabledFactor <= 1.0);
 }
+
+
+const kMarkerColors = [
+  Colors.red,
+  Colors.blue,
+  Colors.green,
+  Colors.yellowAccent,
+  Colors.purple,
+  Colors.orange,
+  Colors.brown,
+  Colors.indigo,
+  Colors.lightBlue,
+  Colors.teal
+];

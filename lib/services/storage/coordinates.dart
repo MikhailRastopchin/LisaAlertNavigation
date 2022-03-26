@@ -138,8 +138,17 @@ class CoordinatesService
         name: 'Вася',
         registeredAt: DateTime.now(),
         coordinate: LatLng(
-          56.9958 + random.nextDouble() / 3000,
-          40.9858 + random.nextDouble() / 3000,
+          56.9999 + random.nextDouble() / 3000,
+          40.9899 + random.nextDouble() / 3000,
+        ),
+      ),
+      FoxCoordinate(
+        id: 03,
+        name: 'Роберт Аркадиевич',
+        registeredAt: DateTime.now(),
+        coordinate: LatLng(
+          56.0184 + random.nextDouble() / 3000,
+          92.8671 + random.nextDouble() / 3000,
         ),
       ),
       FoxCoordinate(
@@ -147,17 +156,8 @@ class CoordinatesService
         name: 'Коля',
         registeredAt: DateTime.now(),
         coordinate: LatLng(
-          56.9958 + random.nextDouble() / 3000,
-          40.9858 + random.nextDouble() / 3000,
-        ),
-      ),/*
-      FoxCoordinate(
-        id: 03,
-        name: 'Роберт Аркадиевич',
-        registeredAt: DateTime.now(),
-        coordinate: LatLng(
-          56.9958 + random.nextDouble() / 3000,
-          40.9858 + random.nextDouble() / 3000,
+          56.9940 + random.nextDouble() / 3000,
+          41.0000 + random.nextDouble() / 3000,
         ),
       ),
       FoxCoordinate(
@@ -166,7 +166,7 @@ class CoordinatesService
         registeredAt: DateTime.now(),
         coordinate: LatLng(
           56.9958 + random.nextDouble() / 3000,
-          40.9858 + random.nextDouble() / 3000,
+          40.9500 + random.nextDouble() / 3000,
         ),
       ),
       FoxCoordinate(
@@ -177,7 +177,7 @@ class CoordinatesService
           56.9958 + random.nextDouble() / 3000,
           40.9858 + random.nextDouble() / 3000,
         ),
-      ),
+      ),/*
       FoxCoordinate(
         id: 06,
         name: 'Ашот',

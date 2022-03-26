@@ -16,20 +16,6 @@ import '../models.dart';
 import 'common/styles.dart';
 
 
-const _kMarkerColors = [
-  Colors.red,
-  Colors.blue,
-  Colors.green,
-  Colors.yellowAccent,
-  Colors.purple,
-  Colors.orange,
-  Colors.brown,
-  Colors.indigo,
-  Colors.lightBlue,
-  Colors.teal
-];
-
-
 class MapPage extends StatefulWidget
 {
   const MapPage({Key? key}) : super(key: key);
@@ -87,8 +73,8 @@ class _MapPageState extends State<MapPage>
     }
     for (var index = 0; index < coordinates.tracks.length; index++) {
       final dividedIndex = index > 9 ? index % 10 : index;
-      assert(dividedIndex < _kMarkerColors.length);
-      final color = _kMarkerColors[dividedIndex];
+      assert(dividedIndex < kMarkerColors.length);
+      final color = kMarkerColors[dividedIndex];
       final track = coordinates.tracks[index];
       markers.add(_buildMarker(track, color));
       polilines.add(_buildPoliline(track, color));

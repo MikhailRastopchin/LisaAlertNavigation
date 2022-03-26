@@ -185,6 +185,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(
+            create: (context) => Global.storage.compass,
+          ),
+          ChangeNotifierProvider(
             create: (context) => Global.storage.coordinates,
           ),
           ChangeNotifierProvider(

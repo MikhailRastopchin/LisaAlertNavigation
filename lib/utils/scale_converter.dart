@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:latlong2/latlong.dart';
 
+import 'nvector/nvector.dart';
+
+
 const double piOver180 = pi / 180.0;
 double toDegrees(double radians) {
   return radians / piOver180;
@@ -146,4 +149,48 @@ LatLng calculateEndingGlobalCoordinates(
   longitude = longitude < -180 ? -180 : longitude;
   longitude = longitude > 180 ? 180 : longitude;
   return LatLng(latitude, longitude);
+}
+
+
+double calculeteAzimuth(final LatLng center, final LatLng target)
+{
+  final llNvectorCenter = LatLonNVectorEllipsoidal(
+    lat: center.latitude,
+    lon: center.longitude,
+  );
+  final llNvectorTarget = LatLonNVectorEllipsoidal(
+    lat: target.latitude,
+    lon: target.longitude,
+  );
+  return llNvectorCenter.deltaTo(llNvectorTarget).bearing;
+}
+
+
+double calculeteDistance(final LatLng center, final LatLng target)
+{
+  final llNvectorCenter = LatLonNVectorEllipsoidal(
+    lat: center.latitude,
+    lon: center.longitude,
+  );
+  final llNvectorTarget = LatLonNVectorEllipsoidal(
+    lat: target.latitude,
+    lon: target.longitude,
+  );
+  return llNvectorCenter.deltaTo(llNvectorTarget).lenght;
+}
+
+List<double> calculeteAzimuthAndDistance(final LatLng center, final LatLng target)
+{
+  final llNvectorCenter = LatLonNVectorEllipsoidal(
+    lat: center.latitude,
+    lon: center.longitude,
+  );
+  final llNvectorTarget = LatLonNVectorEllipsoidal(
+    lat: target.latitude,
+    lon: target.longitude,
+  );
+  return [
+    llNvectorCenter.deltaTo(llNvectorTarget).bearing,
+    llNvectorCenter.deltaTo(llNvectorTarget).lenght,
+  ];
 }
