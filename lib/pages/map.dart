@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:la_navigation/pages/map/coordinate_dialog.dart';
 import 'package:la_navigation/plugins/grid.dart';
 import 'package:la_navigation/services/storage/grid.dart';
 import 'package:la_navigation/utils/utm/src/constants.dart';
@@ -179,34 +180,30 @@ class _MapPageState extends State<MapPage>
     return Marker(
       key: ValueKey(coordinate),
       width: maxLabelWidth,
-      height: labelHeight,
+      height: maxLabelWidth,
       point: LatLng(coordinate.lat, coordinate.lon),
       rotate: true,
-      builder: (context) => Tooltip(
-        message: showAsUTM
-          ? 'зона: ${coordinate.zone}, на восток: ${coordinate.easting}, на север: ${coordinate.northing}'
-          : 'Широта: ${coordinate.lat}, долгота: ${coordinate.lon}',
-        child: InkWell(
-          onTap: () => _showCoordinateInfo(coordinate: coordinate, label: label),
+      builder: (context) => InkWell(
+        onTap: () => _showCoordinateInfo(coordinate: coordinate, label: label),
+        child: Container(
+          alignment: Alignment.center,
+          constraints: const BoxConstraints(
+            minHeight: labelHeight,
+            minWidth: labelHeight,
+            maxWidth: maxLabelWidth,
+            maxHeight: maxLabelWidth,
+          ),
           child: Container(
-            alignment: Alignment.center,
-            constraints: const BoxConstraints(
-              minHeight: labelHeight,
-              minWidth: labelHeight,
-              maxWidth: maxLabelWidth,
-            ),
-            child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(labelHeight / 2),
-                  color: AppStyle.liteColors.primaryColor
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: Text(label,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.subtitle2!.copyWith(color: Colors.amber),
-                  overflow: TextOverflow.ellipsis,
-                ),
-            ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(labelHeight / 2),
+                color: AppStyle.liteColors.primaryColor
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(label,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.subtitle2!.copyWith(color: Colors.amber),
+                overflow: TextOverflow.ellipsis,
+              ),
           ),
         ),
       ),
@@ -248,7 +245,13 @@ class _MapPageState extends State<MapPage>
     required final String label,
   }) async
   {
-    //TODO: show cooredinate info dialog.
+    await showDialog(
+      context: context,
+      builder: (context) => CoordinateDialog(
+        coordinate: coordinate,
+        label: label,
+      ),
+    );
   }
 
   void _rebuild() => setState(() {});
