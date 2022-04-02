@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:la_navigation/utils/utm/utm.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../models.dart';
@@ -102,7 +103,10 @@ class QuadrantLayer extends StatelessWidget {
     );
   }
 
-  void _fillOffsets(final List<Offset> offsets, final List<LatLng> points) {
+  void _fillOffsets(final List<Offset> offsets, final List<UtmCoordinate> utmPoints) {
+    final points = utmPoints
+      .map((utmPoint) => LatLng(utmPoint.lat, utmPoint.lon))
+      .toList();
     for (var i = 0, len = points.length; i < len; ++i) {
       var point = points[i];
 

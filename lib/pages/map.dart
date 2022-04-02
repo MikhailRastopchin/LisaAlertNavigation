@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:la_navigation/plugins/grid.dart';
 import 'package:la_navigation/services/storage/grid.dart';
+import 'package:la_navigation/utils/utm/src/constants.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -33,24 +34,35 @@ class _MapPageState extends State<MapPage>
   {
     super.initState();
     _mapController = MapController();
+    _coordinates = context.read<CoordinatesService>();
+    _mapService = context.read<MapService>();
+    _gridService = context.read<GridService>();
+    _coordinates.addListener(_rebuild);
+    _mapService.addListener(_rebuild);
+    _gridService.addListener(_rebuild);
+  }
+
+  @override
+  void dispose()
+  {
+    _coordinates.removeListener(_rebuild);
+    _mapService.removeListener(_rebuild);
+    _gridService.removeListener(_rebuild);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context)
   {
-    final coordinates = context.watch<CoordinatesService>();
     return Scaffold(
       appBar: AppBar(title: const Text('Карта'), centerTitle: true),
-      body: coordinates.ownCoordinate == null ? null :content,
+      body: _coordinates.ownCoordinate == null ? null :content,
     );
   }
 
   Widget get content
   {
-    final coordinates = context.watch<CoordinatesService>();
-    final mapService = context.watch<MapService>();
-    final gridService = context.watch<GridService>();
-    final tileLayerOptions = mapService.settings.useLocalMap
+    final tileLayerOptions = _mapService.settings.useLocalMap
       ? TileLayerOptions(
           urlTemplate: "/storage/emulated/0/tiles/map/{z}/{x}/{y}.png",
           tileProvider: const FileTileProvider(),
@@ -61,49 +73,50 @@ class _MapPageState extends State<MapPage>
           tileProvider: NetworkTileProvider(),
         );
     List<Quadrant> quadrants = [];
-    Map<String, LatLng> gridPoints = {};
-    if (gridService.settings.showGrid) {
-      quadrants = gridService.quadrants!;
-      gridPoints = gridService.gridPoints!;
+    Map<String, UtmCoordinate> gridPoints = {};
+    if (_gridService.settings.showGrid) {
+      quadrants = _gridService.quadrants!;
+      gridPoints = _gridService.gridPoints!;
     }
     final markers = <Marker>[];
     final polilines = <Polyline>[];
-    if (coordinates.showOwnTrack) {
-      polilines.add(_buildPoliline(coordinates.ownTrack, Colors.red));
+    if (_coordinates.showOwnTrack) {
+      polilines.add(_buildPoliline(_coordinates.ownTrack, Colors.red));
     }
-    for (var index = 0; index < coordinates.tracks.length; index++) {
+    for (var index = 0; index < _coordinates.tracks.length; index++) {
       final dividedIndex = index > 9 ? index % 10 : index;
       assert(dividedIndex < kMarkerColors.length);
       final color = kMarkerColors[dividedIndex];
-      final track = coordinates.tracks[index];
+      final track = _coordinates.tracks[index];
       markers.add(_buildMarker(track, color));
       polilines.add(_buildPoliline(track, color));
     }
     final ownMarker = _buildOwnMarker(
-      coordinates.ownCoordinate!,
-      coordinates.oldOwnCoordinate ?? coordinates.ownCoordinate!,
+      _coordinates.ownCoordinate!,
+      _coordinates.oldOwnCoordinate ?? _coordinates.ownCoordinate!,
     );
     final gridMarkers = gridPoints.entries
       .map((point) => _buildGridMarker(
         label: point.key,
-        coordinate: point.value
+        coordinate: point.value,
+        showAsUTM: _gridService.settings.useUTM,
       ));
     markers.addAll(gridMarkers);
     markers.add(ownMarker);
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        center: coordinates.ownCoordinate,
+        center: _coordinates.ownCoordinate,
         zoom: 18.0,
         plugins: [
-          if (gridService.settings.showGrid) GridLayerPlugin(),
+          if (_gridService.settings.showGrid) GridLayerPlugin(),
           ZoomButtonsPlugin(),
           CurrentLocationButtonPlugin(),
         ],
       ),
       layers: [
         tileLayerOptions,
-        if (gridService.settings.showGrid) GridLayerPluginOption(
+        if (_gridService.settings.showGrid) GridLayerPluginOption(
           quadrants: quadrants
         ),
         PolylineLayerOptions(polylines: polilines),
@@ -112,7 +125,7 @@ class _MapPageState extends State<MapPage>
       nonRotatedLayers: [
         CurrentLocationButtonPluginOption(
           controller: _mapController,
-          targetLocation: coordinates.ownCoordinate!,
+          targetLocation: _coordinates.ownCoordinate!,
           padding: 10.0,
           alignment: const Alignment(1.0, 0.5),
           iconColor: AppStyle.liteColors.headerTextColor,
@@ -156,30 +169,45 @@ class _MapPageState extends State<MapPage>
 
   Marker _buildGridMarker({
     required final String label,
-    required final LatLng coordinate,
+    required final UtmCoordinate coordinate,
+    required final bool showAsUTM,
   })
   {
-    const labelSize = 14.0;
+    const labelHeight = 14.0;
+    const maxLabelWidth = 50.0;
+    final theme = Theme.of(context);
     return Marker(
       key: ValueKey(coordinate),
-      width: 30,
-      height: labelSize,
-      point: coordinate,
+      width: maxLabelWidth,
+      height: labelHeight,
+      point: LatLng(coordinate.lat, coordinate.lon),
       rotate: true,
       builder: (context) => Tooltip(
-        message: 'Широта: ${coordinate.latitude}, долгота: ${coordinate.longitude}',
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(labelSize / 2),
-            color: Colors.black
+        message: showAsUTM
+          ? 'зона: ${coordinate.zone}, на восток: ${coordinate.easting}, на север: ${coordinate.northing}'
+          : 'Широта: ${coordinate.lat}, долгота: ${coordinate.lon}',
+        child: InkWell(
+          onTap: () => _showCoordinateInfo(coordinate: coordinate, label: label),
+          child: Container(
+            alignment: Alignment.center,
+            constraints: const BoxConstraints(
+              minHeight: labelHeight,
+              minWidth: labelHeight,
+              maxWidth: maxLabelWidth,
+            ),
+            child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(labelHeight / 2),
+                  color: AppStyle.liteColors.primaryColor
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Text(label,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.subtitle2!.copyWith(color: Colors.amber),
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ),
           ),
-          constraints: const BoxConstraints(
-            minHeight: labelSize,
-            minWidth: labelSize,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: Text(label, style: const TextStyle(color: Colors.amber)),
         ),
       ),
     );
@@ -215,5 +243,19 @@ class _MapPageState extends State<MapPage>
     );
   }
 
+  Future<void> _showCoordinateInfo({
+    required final UtmCoordinate coordinate,
+    required final String label,
+  }) async
+  {
+    //TODO: show cooredinate info dialog.
+  }
+
+  void _rebuild() => setState(() {});
+
   late final MapController _mapController;
+
+  late final CoordinatesService _coordinates ;
+  late final MapService _mapService;
+  late final GridService _gridService;
 }

@@ -38,7 +38,34 @@ class UtmCoordinate {
 
   /// constructor
   const UtmCoordinate(this.lat, this.lon, this.easting, this.northing,
-      this.zoneNumber, this.zoneLetter);
+      this.zoneNumber, this.zoneLetter) : assert(lat < 90 && lat > - 90);
+
+  static UtmCoordinate fromJson(final Map<String, dynamic> jsonValue)
+  {
+    final lat = jsonValue['lat'];
+    final lon = jsonValue['lon'];
+    final easting = jsonValue['easting'];
+    final northing = jsonValue['northing'];
+    final zoneNumber = jsonValue['zoneNumber'];
+    final zoneLetter = jsonValue['zoneLetter'];
+    return UtmCoordinate(lat, lon, easting, northing, zoneNumber, zoneLetter);
+  }
+
+  Map<String, dynamic> toJson()
+    => {
+        'lat': lat,
+        'lon': lon,
+        'easting': easting,
+        'northing': northing,
+        'zoneNumber': zoneNumber,
+        'zoneLetter': zoneLetter,
+      };
+
+  @override
+  String toString()
+  {
+    return 'zone: $zone, easting: ${easting.round()}, northing: ${northing.round()}';
+  }
 }
 
 

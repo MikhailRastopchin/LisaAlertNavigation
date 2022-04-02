@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:la_navigation/utils/utm/src/converter.dart';
+import 'package:la_navigation/utils/utm/utm.dart';
 
-import '../utils/scale_converter.dart';
 import 'grid_settings.dart';
 
 
@@ -9,28 +9,65 @@ class Quadrant
 {
   static List<Quadrant> generateQuadrants(final GridSettings settings)
   {
-    final quadrants = <Quadrant>[];
+    final converter = UtmConverter(GeodeticSystemType.wgs84);
+    final nextZone = converter.latlonToUtm(
+      settings.startCoordinate!.lat,
+      settings.startCoordinate!.lon + 6,
+    );
     var startPoint = settings.startCoordinate!;
-    for (var indexY = 1; indexY <= settings.verticalStepsCount!; indexY++) {
-      if (indexY != 1) {
-        startPoint = calculateEndingGlobalCoordinates(
-          settings.startCoordinate!, 180, settings.gridStep! * (indexY - 1)
-        );
+    final quadrants = <Quadrant>[];
+    for (var indexY = 0; indexY < settings.verticalStepsCount!; indexY++) {
+      if (indexY != 0) {
+        startPoint = converter.utmToLatLon(
+            startPoint.easting,
+            startPoint.northing - settings.gridStep!,
+            startPoint.zoneNumber,
+            startPoint.zoneLetter,
+          );
       }
-      for (var indexX = 1; indexX <= settings.horizontalStepsCount!; indexX++) {
-        final startTopLeftPoint = startPoint;
-        final topRightPoint = calculateEndingGlobalCoordinates(
-          startPoint, 90, settings.gridStep!
+      var startTopLeftPoint = startPoint;
+      for (var indexX = 0; indexX < settings.horizontalStepsCount!; indexX++) {
+        if (indexX != 0) {
+          startTopLeftPoint =  startTopLeftPoint.easting + settings.gridStep! > 1000000
+            ? converter.utmToLatLon(
+                startTopLeftPoint.easting + settings.gridStep!- 1000000,
+                startTopLeftPoint.northing,
+                nextZone.zoneNumber,
+                nextZone.zoneLetter,
+              )
+            : converter.utmToLatLon(
+                startTopLeftPoint.easting + settings.gridStep!,
+                startTopLeftPoint.northing,
+                startTopLeftPoint.zoneNumber,
+                startTopLeftPoint.zoneLetter,
+              );
+        }
+        final topRightPoint = startTopLeftPoint.easting + settings.gridStep! > 1000000
+          ? converter.utmToLatLon(
+              startTopLeftPoint.easting + settings.gridStep! - 1000000,
+              startTopLeftPoint.northing,
+              nextZone.zoneNumber,
+              nextZone.zoneLetter,
+            )
+          : converter.utmToLatLon(
+              startTopLeftPoint.easting + settings.gridStep!,
+              startTopLeftPoint.northing,
+              startTopLeftPoint.zoneNumber,
+              startTopLeftPoint.zoneLetter,
+            );
+        final bottomRightPoint = converter.utmToLatLon(
+          topRightPoint.easting,
+          topRightPoint.northing - settings.gridStep!,
+          topRightPoint.zoneNumber,
+          topRightPoint.zoneLetter,
         );
-        final bottomRightPoint = calculateEndingGlobalCoordinates(
-          topRightPoint, 180, settings.gridStep!
+        final bottomLeftPoint = converter.utmToLatLon(
+          startTopLeftPoint.easting,
+          startTopLeftPoint.northing - settings.gridStep!,
+          startTopLeftPoint.zoneNumber,
+          startTopLeftPoint.zoneLetter,
         );
-        final bottomLeftPoint = calculateEndingGlobalCoordinates(
-          bottomRightPoint, -90, settings.gridStep!
-        );
-        final endTopLeftPoint = calculateEndingGlobalCoordinates(
-          bottomLeftPoint, 0, settings.gridStep!
-        );
+        final endTopLeftPoint = startTopLeftPoint;
         final points = [
           startTopLeftPoint,
           topRightPoint,
@@ -39,13 +76,12 @@ class Quadrant
           endTopLeftPoint,
         ];
         quadrants.add(Quadrant(points: points));
-        startPoint = topRightPoint;
       }
     }
     return quadrants;
   }
 
-  final List<LatLng> points;
+  final List<UtmCoordinate> points;
   final List<Offset> offsets = [];
   final double lineWidth;
   final TextStyle? labelStyle;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:la_navigation/services/storage/coordinates.dart';
+import 'package:la_navigation/utils/utm/src/converter.dart';
+import 'package:la_navigation/utils/utm/utm.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +30,7 @@ class _DailyForecastPageState extends State<DailyForecastPage>
     final mapService = context.read<MapService>();
     final gridService = context.read<GridService>();
     _showGrid = gridService.settings.showGrid;
+    _useUTM = gridService.settings.useUTM;
     _useLocalMap = mapService.settings.useLocalMap;
     _swPanBoundaryLatController = TextEditingController(
       text: mapService.settings.swPanBoundary?.latitude.toString() ?? '',
@@ -42,10 +45,10 @@ class _DailyForecastPageState extends State<DailyForecastPage>
       text: mapService.settings.nePanBoundary?.longitude.toString() ?? '',
     );
     _gridStartLatController = TextEditingController(
-      text: gridService.settings.startCoordinate?.latitude.toString() ?? ''
+      text: gridService.settings.startCoordinate?.lat.toString() ?? ''
     );
     _gridStartLongController = TextEditingController(
-      text: gridService.settings.startCoordinate?.longitude.toString() ?? ''
+      text: gridService.settings.startCoordinate?.lon.toString() ?? ''
     );
     _gridStepController = TextEditingController(
       text: gridService.settings.gridStep?.toString() ?? ''
@@ -248,6 +251,14 @@ class _DailyForecastPageState extends State<DailyForecastPage>
       ),
       const SizedBox(height: 15.0),
       Row(children: [
+        const Expanded(child: Text('Использовать узлы UTM')),
+        Switch(
+          value: _useUTM,
+          onChanged: (value) => setState(() => _useUTM = !_useUTM),
+        ),
+      ]),
+      const SizedBox(height: 15.0),
+      Row(children: [
         const Expanded(child: Text('Отобразить сетку')),
         Switch(
           value: _showGrid,
@@ -309,14 +320,15 @@ class _DailyForecastPageState extends State<DailyForecastPage>
 
   Future<void> _saveGridSettings() async
   {
+    final converter = UtmConverter(GeodeticSystemType.wgs84);
     final validated = _validateGridSettings();
     if (!validated) return;
     final gridService = context.read<GridService>();
     final startLat = double.tryParse(_gridStartLatController.text);
     final startLong = double.tryParse(_gridStartLongController.text);
-    LatLng? startCoordinate;
+    UtmCoordinate? startCoordinate;
     if (startLat != null && startLong != null) {
-      startCoordinate = LatLng(startLat, startLong);
+      startCoordinate = converter.latlonToUtm(startLat, startLong);
     }
     final settings = GridSettings(
       showGrid: _showGrid,
@@ -492,4 +504,5 @@ class _DailyForecastPageState extends State<DailyForecastPage>
 
   late bool _useLocalMap;
   late bool _showGrid;
+  late bool _useUTM;
 }
