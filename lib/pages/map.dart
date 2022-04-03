@@ -72,6 +72,8 @@ class _MapPageState extends State<MapPage>
           urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           subdomains: ['a', 'b', 'c'],
           tileProvider: NetworkTileProvider(),
+          fastReplace: true,
+          keepBuffer: 100,
         );
     List<Quadrant> quadrants = [];
     Map<String, UtmCoordinate> gridPoints = {};
@@ -107,6 +109,10 @@ class _MapPageState extends State<MapPage>
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
+        boundsOptions: const FitBoundsOptions(
+          padding: EdgeInsets.zero,
+          inside: true,
+        ),
         center: _coordinates.ownCoordinate,
         zoom: 18.0,
         plugins: [
