@@ -332,6 +332,7 @@ class _DailyForecastPageState extends State<DailyForecastPage>
     }
     final settings = GridSettings(
       showGrid: _showGrid,
+      useUTM: _useUTM,
       startCoordinate: startCoordinate,
       gridStep: double.tryParse(_gridStepController.text),
       horizontalStepsCount: int.tryParse(_horyzontalStepsCountController.text),
