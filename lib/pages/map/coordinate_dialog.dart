@@ -65,7 +65,7 @@ class CoordinateDialog extends StatelessWidget
             ]),
             const SizedBox(height: 15),
             ElevatedButton(
-              child: Text('ОК'),
+              child: const Text('ОК'),
               onPressed: () => Routing.goBack(context),
             ),
           ],

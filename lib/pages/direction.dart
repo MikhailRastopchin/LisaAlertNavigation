@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:angles/angles.dart';
@@ -27,35 +26,12 @@ class _DirectionPageState extends State<DirectionPage>
   with TickerProviderStateMixin
 {
   @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-      animationBehavior: AnimationBehavior.preserve
-    );
-    _animation = Tween<double>(
-        begin: const Angle.degrees(0.0).radians * -1,
-        end: const Angle.degrees(180).radians * -1,
-      ).animate(_animationController);
-    _timer = Timer(const Duration(milliseconds: 25), _updateAzimuth);
-  }
-
-  @override
-  void dispose()
-  {
-    _animationController.dispose();
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(final BuildContext context)
   {
     final hasPermission = context.watch<CompassService>().hasPermission;
     return Scaffold(
       appBar: AppBar(title: const Text('Направление'), centerTitle: true),
-      body: hasPermission ? directionView : _buildPermissionSheet(),
+      body: hasPermission ? directionView : const _PermissionSheet(),
     );
   }
 
@@ -70,14 +46,12 @@ class _DirectionPageState extends State<DirectionPage>
     return Column(
       children: <Widget>[
         const SizedBox(height: 10.0),
-        azimuth,
-        const SizedBox(height: 10.0),
         SizedBox(
           width: media.size.width,
-          height: media.size.width + 40,
+          height: media.size.width + 70,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: _buildCompass(points),
+            child: _CompassView(markers:points),
           ),
         ),
         Expanded(
@@ -97,76 +71,97 @@ class _DirectionPageState extends State<DirectionPage>
     );
   }
 
-  Widget get azimuth
+  Widget _buildLegendEntry({
+    required final Color color,
+    required final double distance,
+    required final String name,
+  })
   {
-    final theme = Theme.of(context);
-    final accurency = _currentData?.accuracy?.floor();
-    final accurencyText = accurency == null
-      ? ''
-      : '\u{00b1}$accurency';
-    final currentAzimuth = _currentData?.heading == null
-      ? ''
-      : _currentData!.heading! >= 0
-        ? _currentData!.heading!.floor().toString()
-        : (180 + (180 + _currentData!.heading!)).floor().toString();
-    String info = currentAzimuth.isEmpty
-      ? ''
-      : accurencyText.isEmpty
-        ? '$currentAzimuth\u{00b0}'
-        : '$currentAzimuth$accurencyText\u{00b0}';
-    return Text('Текущий азимут: $info', style: theme.textTheme.headline5);
-  }
-
-  Widget _buildCompass(final Map<Color, List<double>> markers)
-  {
-    return StreamBuilder<CompassEvent>(
-      stream: FlutterCompass.events,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error reading heading: ${snapshot.error}');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        double? direction = snapshot.data!.heading;
-
-        // if direction is null, then device does not support this sensor
-        // show error message
-        if (direction == null) {
-          return const Center(
-            child: Text("Device does not have sensors !"),
-          );
-        }
-
-        return  _buildCompassView(direction, markers);
-      },
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Icon(Icons.navigation, color: color),
+            const SizedBox(width: 10),
+            Expanded(child: Text(name, style: TextStyle(color: color))),
+            const SizedBox(width: 10),
+            Text('${distance.round()} м.', style: TextStyle(color: color)),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildCompassView(
-    final double direction,
-    final Map<Color, List<double>> markers,
+  Map<Color, List<double>> _getAzimuthsAndDistances(
+    final LatLng ownCoordinate,
+    final List<AnotherFoxTrack> coordinates,
   )
   {
+    final azimuthsAndDistances = <Color, List<double>>{};
+    for (var index = 0; index < coordinates.length; index++) {
+      final targetTrack = coordinates[index];
+      final targetCoordinate = targetTrack.currentCoordinate;
+      final angleAndDistance = calculeteAzimuthAndDistance(
+        ownCoordinate,
+        targetCoordinate,
+      );
+      final dividedIndex = index > 9 ? index % 10 : index;
+      assert(dividedIndex < kMarkerColors.length);
+      final color = kMarkerColors[dividedIndex];
+      azimuthsAndDistances[color] = angleAndDistance;
+    }
+    return azimuthsAndDistances;
+  }
+}
+
+
+class _CompassView extends StatefulWidget
+{
+  final Map<Color, List<double>> markers;
+
+  const _CompassView({ final Key? key, required this.markers}) : super(key: key);
+
+  @override
+  State<_CompassView> createState() => _CompassViewState();
+}
+
+
+class _CompassViewState extends State<_CompassView>
+{
+  @override
+  void initState()
+  {
+    super.initState();
+    FlutterCompass.events?.listen((event) {
+      if (event.heading != null) {
+        setState(() {
+          _previosDirection = _currentDirection ?? 0;
+          _currentDirection = event.heading;
+          _accuracy = event.accuracy;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(final BuildContext context)
+  {
     final media = MediaQuery.of(context);
-    final content = Container(
-      height: media.size.width - 10,
-      width: media.size.width - 10,
-      padding: const EdgeInsets.all(5.0),
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-      ),
-      child: AnimatedBuilder(
-        animation: _animation,
+    final content = Transform.rotate(
+      angle: Angle.degrees(_currentDirection ?? _previosDirection).radians * - 1,
+      child: Container(
+        height: media.size.width - 10,
+        width: media.size.width - 10,
+        padding: const EdgeInsets.all(5.0),
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+        ),
         child: Stack(
           alignment: AlignmentDirectional.center,
           children: [
-            _buildMarkers(markers),
+            _buildMarkers(widget.markers),
             Padding(
               padding: const EdgeInsets.all(36.0),
               child: Container(
@@ -182,18 +177,14 @@ class _DirectionPageState extends State<DirectionPage>
             ),
           ],
         ),
-        builder: (context, child) {
-          return Transform.rotate(
-            angle: _animation.value,
-            child: child
-          );
-        }
       ),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SizedBox(height: 10.0),
+        directionInfo,
         Container(
           alignment: Alignment.bottomCenter,
           child: Transform.rotate(
@@ -209,6 +200,28 @@ class _DirectionPageState extends State<DirectionPage>
           child: content,
         ),
       ],
+    );
+  }
+
+  Widget get directionInfo
+  {
+    final theme = Theme.of(context);
+    final accuracyText = _accuracy == null
+      ? ''
+      : '\u{00b1}${_accuracy!.floor()};';
+    final currentAzimuth = _currentDirection == null
+      ? ''
+      : _currentDirection! >= 0
+        ? _currentDirection!.floor().toString()
+        : (180 + (180 + _currentDirection!)).floor().toString();
+    String info = currentAzimuth.isEmpty
+      ? ''
+      : accuracyText.isEmpty
+        ? '$currentAzimuth\u{00b0}'
+        : '$currentAzimuth$accuracyText\u{00b0}';
+    return Text('Текущий азимут: $info',
+      style: theme.textTheme.headline5,
+      textAlign: TextAlign.center,
     );
   }
 
@@ -237,29 +250,18 @@ class _DirectionPageState extends State<DirectionPage>
     );
   }
 
-  Widget _buildLegendEntry({
-    required final Color color,
-    required final double distance,
-    required final String name,
-  })
-  {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Icon(Icons.navigation, color: color),
-            const SizedBox(width: 10),
-            Expanded(child: Text(name, style: TextStyle(color: color))),
-            const SizedBox(width: 10),
-            Text('${distance.round()} м.', style: TextStyle(color: color)),
-          ],
-        ),
-      ),
-    );
-  }
+  double? _currentDirection;
+  double? _accuracy;
+  double _previosDirection = 0;
+}
 
-  Widget _buildPermissionSheet()
+
+class _PermissionSheet extends StatelessWidget
+{
+  const _PermissionSheet({Key? key}) : super(key: key);
+
+  @override
+  Widget build(final BuildContext context)
   {
     final compassService = context.read<CompassService>();
     final theme = Theme.of(context);
@@ -280,45 +282,4 @@ class _DirectionPageState extends State<DirectionPage>
       ),
     );
   }
-
-  Future<void> _updateAzimuth() async
-  {
-    _timer.cancel();
-    final CompassEvent tmp = await FlutterCompass.events!.first;
-    _previosData = _currentData;
-    _currentData = tmp;
-    _animation = Tween<double>(
-      begin: Angle.degrees(_previosData?.heading ?? 0.0).radians * -1,
-      end: Angle.degrees(_currentData!.heading!).radians * -1,
-    ).animate(_animationController);
-    _timer = Timer(Duration.zero, () => _updateAzimuth());
-  }
-
-  Map<Color, List<double>> _getAzimuthsAndDistances(
-    final LatLng ownCoordinate,
-    final List<AnotherFoxTrack> coordinates,
-  )
-  {
-    final azimuthsAndDistances = <Color, List<double>>{};
-    for (var index = 0; index < coordinates.length; index++) {
-      final targetTrack = coordinates[index];
-      final targetCoordinate = targetTrack.currentCoordinate;
-      final angleAndDistance = calculeteAzimuthAndDistance(
-        ownCoordinate,
-        targetCoordinate,
-      );
-      final dividedIndex = index > 9 ? index % 10 : index;
-      assert(dividedIndex < kMarkerColors.length);
-      final color = kMarkerColors[dividedIndex];
-      azimuthsAndDistances[color] = angleAndDistance;
-    }
-    return azimuthsAndDistances;
-  }
-
-  late final AnimationController _animationController;
-  late Animation<double> _animation;
-
-  late Timer _timer;
-  CompassEvent? _currentData;
-  CompassEvent? _previosData;
 }
